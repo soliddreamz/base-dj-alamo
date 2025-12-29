@@ -1,47 +1,75 @@
-const CACHE_NAME = 'base-dj-alamo-v4';
+const CACHE_VERSION = 'base-dj-alamo-v1';
+const STATIC_CACHE = `static-${CACHE_VERSION}`;
 
-const CORE_ASSETS = [
+const STATIC_ASSETS = [
   './',
   './index.html',
+  './content.json',
   './manifest.json',
-  './content.json'
+  './dj-alamo.png',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS))
-  );
   self.skipWaiting();
+  event.waitUntil(
+    caches.open(STATIC_CACHE).then((cache) => cache.addAll(STATIC_ASSETS))
+  );
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.map((k) => (k === CACHE_NAME ? null : caches.delete(k))))
-    )
-  );
-  self.clients.claim();
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(
+      keys.map((k) => (k.startsWith('static-') && k !== STATIC_CACHE) ? caches.delete(k) : Promise.resolve())
+    );
+    await self.clients.claim();
+  })());
 });
 
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // Only handle same-origin
-  if (url.origin !== location.origin) return;
+  // Only handle same-origin requests (your github.io)
+  if (url.origin !== self.location.origin) return;
 
-  event.respondWith(
-    caches.match(req).then((cached) => {
-      if (cached) return cached;
+  // Always get fresh content.json (network-first)
+  if (url.pathname.endsWith('/content.json')) {
+    event.respondWith(networkFirst(req));
+    return;
+  }
 
-      return fetch(req).then((res) => {
-        // Cache GET requests for basic offline resilience
-        if (req.method === 'GET' && res.ok) {
-          const copy = res.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
-        }
-        return res;
-      }).catch(() => caches.match('./index.html'));
-    })
-  );
+  // For HTML navigations: network-first so updates show up
+  const isNavigation = req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html');
+  if (isNavigation) {
+    event.respondWith(networkFirst(req));
+    return;
+  }
+
+  // Everything else: cache-first
+  event.respondWith(cacheFirst(req));
 });
+
+async function cacheFirst(req) {
+  const cached = await caches.match(req);
+  if (cached) return cached;
+  const fresh = await fetch(req);
+  const cache = await caches.open(STATIC_CACHE);
+  cache.put(req, fresh.clone());
+  return fresh;
+}
+
+async function networkFirst(req) {
+  try {
+    const fresh = await fetch(req, { cache: 'no-store' });
+    const cache = await caches.open(STATIC_CACHE);
+    cache.put(req, fresh.clone());
+    return fresh;
+  } catch (e) {
+    const cached = await caches.match(req);
+    if (cached) return cached;
+    return caches.match('./index.html');
+  }
+}
