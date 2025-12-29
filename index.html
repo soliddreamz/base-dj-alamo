@@ -15,7 +15,6 @@
     --muted:rgba(234,241,255,0.72);
     --btn1:#3b82f6;
     --btn2:#2563eb;
-    --btnDark:#101828;
     --stroke:rgba(255,255,255,0.10);
     --good:#22c55e;
   }
@@ -75,6 +74,7 @@
     color:rgba(234,241,255,0.88);
     background:rgba(0,0,0,0.18);
     border:1px solid rgba(255,255,255,0.10);
+    cursor:pointer;
   }
   .tabBtn.active{
     color:#fff;
@@ -98,6 +98,7 @@
     color:white;
     background:linear-gradient(135deg,var(--btn1),var(--btn2));
     box-shadow:0 10px 28px rgba(59,130,246,0.35);
+    cursor:pointer;
   }
   button.secondary{
     appearance:none;
@@ -110,8 +111,9 @@
     background:linear-gradient(135deg,#172554,#0b1220);
     box-shadow:none;
     border:1px solid rgba(255,255,255,0.10);
+    cursor:pointer;
   }
-  button:disabled{ opacity:0.45; }
+  button:disabled{ opacity:0.45; cursor:not-allowed; }
   button:active{ transform:scale(0.98); }
 
   .playerCard{
@@ -284,7 +286,6 @@
     line-height:1.35;
   }
 
-  /* subtle nostalgic overlay (safe) */
   body::after{
     content:"";
     position:fixed;
@@ -321,7 +322,6 @@
         <button class="tabBtn" data-tab="about">About</button>
       </div>
 
-      <!-- HOME -->
       <div id="tab-home" class="section active">
         <div class="row" style="margin-top:6px;">
           <button id="goListen" class="primary">▶ Start Listening</button>
@@ -337,14 +337,13 @@
 
         <div class="adSlot">
           <div class="adLabel">Ad</div>
-          <div class="adInner" id="adInner">
+          <div class="adInner">
             Pilot Ad Slot (Banner).<br/>
             Brand-safe only. No tracking of personal fan data.
           </div>
         </div>
       </div>
 
-      <!-- LISTEN -->
       <div id="tab-listen" class="section">
         <div class="playerCard">
           <div class="nowPlaying">
@@ -377,7 +376,7 @@
 
         <div class="adSlot">
           <div class="adLabel">Ad</div>
-          <div class="adInner" id="adInner2">
+          <div class="adInner">
             Pilot Banner Slot — replace with sponsor image later.
           </div>
         </div>
@@ -385,7 +384,6 @@
         <div class="list" id="trackList" aria-label="Track list"></div>
       </div>
 
-      <!-- ABOUT -->
       <div id="tab-about" class="section">
         <div class="playerCard">
           <div style="font-weight:900; font-size:14px; text-align:center;">DJ Alamo</div>
@@ -413,14 +411,6 @@
   </div>
 
 <script>
-/**
- * BASE V1 — DJ Alamo Pilot App
- * - Content loads from content.json
- * - Supports:
- *   (A) Hosted audio: plays in app
- *   (B) External links (external:true): opens link (no audio errors)
- */
-
 const statusEl = document.getElementById('status');
 const tabs = document.querySelectorAll('.tabBtn');
 const sections = {
@@ -481,6 +471,15 @@ openExternalBtn.addEventListener('click', () => {
   window.open(currentExternalUrl, '_blank', 'noopener,noreferrer');
 });
 
+function escapeHtml(s){
+  return String(s || '')
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'","&#039;");
+}
+
 function renderTracks(){
   trackListEl.innerHTML = '';
   tracks.forEach((t, i) => {
@@ -521,7 +520,6 @@ function renderTracks(){
 }
 
 function resetPlayerForExternal(url){
-  // Stop audio + hide player controls
   try{ audio.pause(); }catch(e){}
   audio.removeAttribute('src');
   audio.load();
@@ -563,14 +561,11 @@ function openIndex(i){
   showTab('listen');
   setNowPlaying(t);
 
-  const isExternal = !!t.external;
-
-  if(isExternal){
+  if(!!t.external){
     resetPlayerForExternal(t.url);
     return;
   }
 
-  // hosted audio
   resetPlayerForAudio();
   audio.src = t.url;
 
@@ -589,8 +584,6 @@ async function loadContent(){
     const json = await res.json();
     tracks = Array.isArray(json.tracks) ? json.tracks : [];
     renderTracks();
-
-    // Default to first item selected (but do not auto-open)
     setStatus('Ready.');
   }catch(err){
     console.error(err);
@@ -598,16 +591,6 @@ async function loadContent(){
   }
 }
 
-function escapeHtml(s){
-  return String(s || '')
-    .replaceAll('&','&amp;')
-    .replaceAll('<','&lt;')
-    .replaceAll('>','&gt;')
-    .replaceAll('"','&quot;')
-    .replaceAll("'","&#039;");
-}
-
-// PWA install prompt (simple, optional)
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
@@ -622,14 +605,12 @@ installBtn.addEventListener('click', async () => {
   installBtn.style.display = 'none';
 });
 
-// Service worker registration (safe)
 if('serviceWorker' in navigator){
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
   });
 }
 
-// Start
 showTab('home');
 loadContent();
 setStatus('Ready.');
