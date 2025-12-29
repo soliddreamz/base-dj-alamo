@@ -1,0 +1,18 @@
+{
+  "tracks": [
+    {
+      "title": "Alamo Mix #1",
+      "subtitle": "Pilot drop • 20 min",
+      "url": "audio/alamo-mix-1.mp3",
+      "cover": "covers/alamo-1.jpg",
+      "tag": "Mix"
+    },
+    {
+      "title": "Alamo Drop Pack",
+      "subtitle": "Exclusive drops • 2 min",
+      "url": "audio/alamo-drops.mp3",
+      "cover": "covers/alamo-2.jpg",
+      "tag": "Drop"
+    }
+  ]
+}
