@@ -14,23 +14,5 @@
       "url": "https://livemixtapes.com/mixtape/lucky-ozzy-road-2-riches",
       "tag": "LiveMixtapes"
     }
-
-    /* 
-    ─────────────────────────────
-    FUTURE (HOSTED AUDIO EXAMPLE)
-    ─────────────────────────────
-    When you’re ready to host MP3s, 
-    just REMOVE the comment block 
-    and add entries like this:
-    
-    ,
-    {
-      "title": "Exclusive Alamo Mix",
-      "subtitle": "Official App Exclusive • 30 min",
-      "url": "audio/alamo-exclusive-01.mp3",
-      "cover": "covers/alamo-1.jpg",
-      "tag": "Exclusive"
-    }
-    */
   ]
 }
