@@ -2,10 +2,35 @@
   "tracks": [
     {
       "title": "Alamo Mix Vol. 1",
-      "subtitle": "LiveMixtapes",
+      "subtitle": "LiveMixtapes • Classic Set",
       "external": true,
       "url": "https://www.livemixtapes.com/mixtapes/XXXXX.html",
       "tag": "LiveMixtapes"
+    },
+    {
+      "title": "Alamo Mix Vol. 2",
+      "subtitle": "LiveMixtapes • Street Heat",
+      "external": true,
+      "url": "https://www.livemixtapes.com/mixtapes/YYYYY.html",
+      "tag": "LiveMixtapes"
     }
+
+    /* 
+    ─────────────────────────────
+    FUTURE (HOSTED AUDIO EXAMPLE)
+    ─────────────────────────────
+    When you’re ready to host MP3s, 
+    just REMOVE the comment block 
+    and add entries like this:
+    
+    ,
+    {
+      "title": "Exclusive Alamo Mix",
+      "subtitle": "Official App Exclusive • 30 min",
+      "url": "audio/alamo-exclusive-01.mp3",
+      "cover": "covers/alamo-1.jpg",
+      "tag": "Exclusive"
+    }
+    */
   ]
 }
