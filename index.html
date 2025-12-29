@@ -18,7 +18,6 @@
     --btnDark:#101828;
     --stroke:rgba(255,255,255,0.10);
     --good:#22c55e;
-    --warn:#f59e0b;
   }
   *{box-sizing:border-box}
   body{
@@ -183,6 +182,11 @@
     border:1px solid rgba(255,255,255,0.10);
     overflow:hidden;
     flex:0 0 auto;
+    display:grid;
+    place-items:center;
+    color:rgba(234,241,255,0.70);
+    font-weight:900;
+    font-size:14px;
   }
   .track .tCover img{ width:100%; height:100%; object-fit:cover; display:block; }
   .track .tText{ flex:1; min-width:0; }
@@ -210,6 +214,7 @@
     border:1px solid rgba(255,255,255,0.10);
     background:rgba(0,0,0,0.18);
     color:rgba(234,241,255,0.82);
+    flex:0 0 auto;
   }
 
   .adSlot{
@@ -267,6 +272,18 @@
   }
   .dot{ width:8px; height:8px; border-radius:999px; background:var(--good); display:inline-block; }
 
+  .noteBox{
+    margin-top:10px;
+    border-radius:16px;
+    border:1px solid rgba(255,255,255,0.10);
+    background:rgba(0,0,0,0.14);
+    padding:12px;
+    text-align:center;
+    color:rgba(234,241,255,0.78);
+    font-size:13px;
+    line-height:1.35;
+  }
+
   /* subtle nostalgic overlay (safe) */
   body::after{
     content:"";
@@ -287,7 +304,6 @@
 <body>
   <div class="wrap">
     <div class="card">
-      <!-- Replace logo.png with dj-alamo.png (or keep logo.png) -->
       <img src="dj-alamo.png" class="logo" alt="DJ Alamo logo" onerror="this.style.display='none';" />
 
       <div class="title">DJ Alamo</div>
@@ -332,8 +348,9 @@
       <div id="tab-listen" class="section">
         <div class="playerCard">
           <div class="nowPlaying">
-            <div class="cover" id="npCover">
+            <div class="cover">
               <img id="npCoverImg" src="" alt="" style="display:none;" />
+              <div id="npCoverFallback" style="display:grid; place-items:center; width:100%; height:100%; font-weight:900; color:rgba(234,241,255,0.75);">DJ</div>
             </div>
             <div class="npText">
               <p class="npTitle" id="npTitle">Select a track</p>
@@ -347,6 +364,14 @@
           <div class="row" style="margin-top:10px;">
             <button id="prevBtn" class="secondary" disabled>⏮ Prev</button>
             <button id="nextBtn" class="primary" disabled>Next ⏭</button>
+          </div>
+
+          <div id="externalHint" class="noteBox" style="display:none;">
+            This mix is hosted on LiveMixtapes.<br/>
+            Tap <b>Open Mix</b> to listen.
+            <div class="row" style="margin-top:10px;">
+              <button id="openExternalBtn" class="primary">🔗 Open Mix</button>
+            </div>
           </div>
         </div>
 
@@ -382,19 +407,18 @@
         </div>
       </div>
 
-      <div id="status" class="status">Loading…</div>
-      <div class="mini">V1 Pilot • On-device playback • No fan accounts • No uploads</div>
+      <div id="status" class="status">Ready.</div>
+      <div class="mini">V1 Pilot • No fan accounts • No uploads</div>
     </div>
   </div>
 
 <script>
 /**
  * BASE V1 — DJ Alamo Pilot App
- * - Web-first PWA
- * - Content loads from content.json (system-style)
- * - Simple player + track list
- * - Banner ad slot placeholder (pilot-safe)
- * - NO Fan Talk logic, NO recording, NO FX
+ * - Content loads from content.json
+ * - Supports:
+ *   (A) Hosted audio: plays in app
+ *   (B) External links (external:true): opens link (no audio errors)
  */
 
 const statusEl = document.getElementById('status');
@@ -417,10 +441,15 @@ const prevBtn = document.getElementById('prevBtn');
 const nextBtn = document.getElementById('nextBtn');
 
 const npCoverImg = document.getElementById('npCoverImg');
+const npCoverFallback = document.getElementById('npCoverFallback');
+
+const externalHint = document.getElementById('externalHint');
+const openExternalBtn = document.getElementById('openExternalBtn');
 
 let tracks = [];
 let currentIndex = -1;
 let deferredPrompt = null;
+let currentExternalUrl = null;
 
 function setStatus(t){ statusEl.textContent = t; }
 
@@ -429,26 +458,27 @@ function showTab(tab){
   Object.keys(sections).forEach(k => sections[k].classList.toggle('active', k === tab));
 }
 
-tabs.forEach(btn => {
-  btn.addEventListener('click', () => showTab(btn.dataset.tab));
-});
-
+tabs.forEach(btn => btn.addEventListener('click', () => showTab(btn.dataset.tab)));
 goListenBtn.addEventListener('click', () => showTab('listen'));
 
 prevBtn.addEventListener('click', () => {
   if(tracks.length < 1) return;
   const next = (currentIndex <= 0) ? tracks.length - 1 : currentIndex - 1;
-  playIndex(next);
+  openIndex(next);
 });
 nextBtn.addEventListener('click', () => {
   if(tracks.length < 1) return;
   const next = (currentIndex >= tracks.length - 1) ? 0 : currentIndex + 1;
-  playIndex(next);
+  openIndex(next);
 });
 
 audio.addEventListener('ended', () => {
-  // Simple auto-next keeps sessions flowing (pilot-friendly)
   if(tracks.length > 1) nextBtn.click();
+});
+
+openExternalBtn.addEventListener('click', () => {
+  if(!currentExternalUrl) return;
+  window.open(currentExternalUrl, '_blank', 'noopener,noreferrer');
 });
 
 function renderTracks(){
@@ -458,52 +488,92 @@ function renderTracks(){
     item.className = 'track';
     item.setAttribute('role','button');
     item.setAttribute('tabindex','0');
+
+    const isExternal = !!t.external;
+    const coverHtml = t.cover
+      ? `<img src="${escapeHtml(t.cover)}" alt="" />`
+      : `<div style="display:grid;place-items:center;width:100%;height:100%;">${isExternal ? '🔗' : '▶'}</div>`;
+
     item.innerHTML = `
-      <div class="tCover">
-        <img src="${escapeHtml(t.cover || '')}" alt="" style="${t.cover ? '' : 'display:none;'}" />
-      </div>
+      <div class="tCover">${coverHtml}</div>
       <div class="tText">
         <p class="tTitle">${escapeHtml(t.title || 'Untitled')}</p>
-        <div class="tSub">${escapeHtml(t.subtitle || '')}</div>
+        <div class="tSub">${escapeHtml(t.subtitle || (isExternal ? 'External link' : ''))}</div>
       </div>
-      <span class="pill">${escapeHtml(t.tag || 'Play')}</span>
+      <span class="pill">${escapeHtml(t.tag || (isExternal ? 'Open' : 'Play'))}</span>
     `;
-    item.addEventListener('click', () => playIndex(i));
+
+    item.addEventListener('click', () => openIndex(i));
     item.addEventListener('keydown', (e) => {
-      if(e.key === 'Enter' || e.key === ' ') playIndex(i);
+      if(e.key === 'Enter' || e.key === ' ') openIndex(i);
     });
+
     trackListEl.appendChild(item);
   });
 
   if(tracks.length){
     prevBtn.disabled = false;
     nextBtn.disabled = false;
-    setStatus('Ready. Pick a track.');
+    setStatus('Ready. Pick a mix.');
   }else{
     setStatus('No tracks found. Add tracks to content.json.');
   }
 }
 
-function playIndex(i){
+function resetPlayerForExternal(url){
+  // Stop audio + hide player controls
+  try{ audio.pause(); }catch(e){}
+  audio.removeAttribute('src');
+  audio.load();
+  audio.style.display = 'none';
+
+  currentExternalUrl = url || null;
+  externalHint.style.display = 'block';
+  npMeta.textContent = 'External mix (LiveMixtapes).';
+  setStatus('Tap Open Mix.');
+}
+
+function resetPlayerForAudio(){
+  externalHint.style.display = 'none';
+  currentExternalUrl = null;
+  audio.style.display = 'block';
+}
+
+function setNowPlaying(t){
+  npTitle.textContent = t.title || 'Untitled';
+  npMeta.textContent = t.subtitle || 'Ready.';
+  npPill.textContent = (t.tag || 'V1');
+
+  if(t.cover){
+    npCoverImg.src = t.cover;
+    npCoverImg.style.display = 'block';
+    npCoverFallback.style.display = 'none';
+  }else{
+    npCoverImg.style.display = 'none';
+    npCoverImg.src = '';
+    npCoverFallback.style.display = 'grid';
+  }
+}
+
+function openIndex(i){
   const t = tracks[i];
   if(!t) return;
 
   currentIndex = i;
-  npTitle.textContent = t.title || 'Untitled';
-  npMeta.textContent = t.subtitle || 'Playing…';
-  npPill.textContent = (t.tag || 'V1');
+  showTab('listen');
+  setNowPlaying(t);
 
-  // cover
-  if(t.cover){
-    npCoverImg.src = t.cover;
-    npCoverImg.style.display = 'block';
-  }else{
-    npCoverImg.style.display = 'none';
-    npCoverImg.src = '';
+  const isExternal = !!t.external;
+
+  if(isExternal){
+    resetPlayerForExternal(t.url);
+    return;
   }
 
-  // set src and play
+  // hosted audio
+  resetPlayerForAudio();
   audio.src = t.url;
+
   audio.play().then(() => {
     setStatus('Playing.');
   }).catch(() => {
@@ -513,12 +583,15 @@ function playIndex(i){
 
 async function loadContent(){
   try{
-    setStatus('Loading tracks…');
+    setStatus('Loading…');
     const res = await fetch('content.json', { cache: 'no-store' });
     if(!res.ok) throw new Error('content.json not found');
     const json = await res.json();
     tracks = Array.isArray(json.tracks) ? json.tracks : [];
     renderTracks();
+
+    // Default to first item selected (but do not auto-open)
+    setStatus('Ready.');
   }catch(err){
     console.error(err);
     setStatus('Could not load content.json. Make sure it exists in the same folder.');
