@@ -1,4 +1,4 @@
-const CACHE_NAME = 'base-dj-alamo-v2';
+const CACHE_NAME = 'base-dj-alamo-v3';
 
 const CORE_ASSETS = [
   './',
