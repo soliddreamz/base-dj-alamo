@@ -177,8 +177,6 @@
     cursor:pointer;
     user-select:none;
 
-    /* Pilot 3 containment fix ported:
-       keep pill/tag from rendering outside rounded card on iOS */
     width:100%;
     min-width:0;
     overflow:hidden;
@@ -332,6 +330,7 @@
       <div id="tab-home" class="section active">
         <div class="row" style="margin-top:6px;">
           <button id="goListen" class="primary">▶ Start Listening</button>
+          <button id="goSite" class="secondary">🌐 Visit DJAlamo.com</button>
           <button id="installBtn" class="secondary" style="display:none;">➕ Install App</button>
         </div>
 
@@ -428,6 +427,7 @@ const sections = {
 };
 
 const goListenBtn = document.getElementById('goListen');
+const goSiteBtn = document.getElementById('goSite');
 const installBtn = document.getElementById('installBtn');
 
 const audio = document.getElementById('audio');
@@ -474,6 +474,11 @@ function showTab(tab){
 tabs.forEach(btn => btn.addEventListener('click', () => showTab(btn.dataset.tab)));
 goListenBtn.addEventListener('click', () => showTab('listen'));
 
+/* NEW: Official site link (same-tab) */
+goSiteBtn.addEventListener('click', () => {
+  window.location.assign('https://djalamo.com');
+});
+
 prevBtn.addEventListener('click', () => {
   if(tracks.length < 1) return;
   const next = (currentIndex <= 0) ? tracks.length - 1 : currentIndex - 1;
@@ -491,7 +496,6 @@ audio.addEventListener('ended', () => {
 
 openExternalBtn.addEventListener('click', () => {
   if(!currentExternalUrl) return;
-  // Pilot 3 template fix: same-tab navigation to avoid iOS PWA return white-block bug
   window.location.assign(currentExternalUrl);
 });
 
