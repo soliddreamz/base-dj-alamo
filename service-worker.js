@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'base-dj-alamo-v3';
+const CACHE_VERSION = 'base-dj-alamo-v4';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 
 const STATIC_ASSETS = [
@@ -22,7 +22,11 @@ self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
     await Promise.all(
-      keys.map((k) => (k.startsWith('static-') && k !== STATIC_CACHE) ? caches.delete(k) : Promise.resolve())
+      keys.map((k) =>
+        (k.startsWith('static-') && k !== STATIC_CACHE)
+          ? caches.delete(k)
+          : Promise.resolve()
+      )
     );
     await self.clients.claim();
   })());
@@ -32,23 +36,22 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // Only handle same-origin requests (your github.io)
   if (url.origin !== self.location.origin) return;
 
-  // Always get fresh content.json (network-first)
   if (url.pathname.endsWith('/content.json')) {
     event.respondWith(networkFirst(req));
     return;
   }
 
-  // For HTML navigations: network-first so updates show up
-  const isNavigation = req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html');
+  const isNavigation =
+    req.mode === 'navigate' ||
+    (req.headers.get('accept') || '').includes('text/html');
+
   if (isNavigation) {
     event.respondWith(networkFirst(req));
     return;
   }
 
-  // Everything else: cache-first
   event.respondWith(cacheFirst(req));
 });
 
@@ -67,9 +70,8 @@ async function networkFirst(req) {
     const cache = await caches.open(STATIC_CACHE);
     cache.put(req, fresh.clone());
     return fresh;
-  } catch (e) {
+  } catch {
     const cached = await caches.match(req);
-    if (cached) return cached;
-    return caches.match('./index.html');
+    return cached || caches.match('./index.html');
   }
 }
