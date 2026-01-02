@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'base-dj-alamo-v2';
+const CACHE_VERSION = 'base-dj-alamo-v3';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 
 const STATIC_ASSETS = [
