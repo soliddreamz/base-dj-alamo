@@ -26,6 +26,7 @@
     font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
     text-align:center;
     padding:18px 14px 22px;
+    -webkit-text-size-adjust: 100%;
   }
   .wrap{ max-width:500px; margin:0 auto; }
   .card{
@@ -313,7 +314,7 @@
       </div>
 
       <div class="row" style="margin-bottom:8px;">
-        <div class="badge"><span class="dot"></span> Pilot • Powered quietly by Base</div>
+        <div class="badge"><span class="dot"></span> Pilot • Powered by Base</div>
       </div>
 
       <div class="tabs">
@@ -444,6 +445,23 @@ let currentExternalUrl = null;
 
 function setStatus(t){ statusEl.textContent = t; }
 
+/* Pilot 3 template fix: iOS PWA "return from external" repaint kick */
+function forceRepaintKick(){
+  try{
+    const el = document.documentElement;
+    el.style.webkitTransform = 'translateZ(0)';
+    // Force a layout read
+    void el.offsetHeight;
+    // Clear transform next frame
+    requestAnimationFrame(() => { el.style.webkitTransform = ''; });
+  }catch(e){}
+}
+window.addEventListener('pageshow', forceRepaintKick);
+window.addEventListener('focus', forceRepaintKick);
+document.addEventListener('visibilitychange', () => {
+  if(!document.hidden) forceRepaintKick();
+});
+
 function showTab(tab){
   tabs.forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   Object.keys(sections).forEach(k => sections[k].classList.toggle('active', k === tab));
@@ -469,7 +487,8 @@ audio.addEventListener('ended', () => {
 
 openExternalBtn.addEventListener('click', () => {
   if(!currentExternalUrl) return;
-  window.open(currentExternalUrl, '_blank', 'noopener,noreferrer');
+  // Pilot 3 template fix: same-tab navigation to avoid iOS PWA return white-block bug
+  window.location.assign(currentExternalUrl);
 });
 
 function escapeHtml(s){
