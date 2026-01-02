@@ -176,6 +176,12 @@
     border:1px solid rgba(255,255,255,0.10);
     cursor:pointer;
     user-select:none;
+
+    /* Pilot 3 containment fix ported:
+       keep pill/tag from rendering outside rounded card on iOS */
+    width:100%;
+    min-width:0;
+    overflow:hidden;
   }
   .track:active{ transform:scale(0.99); }
   .track .tCover{
@@ -356,7 +362,7 @@
               <p class="npTitle" id="npTitle">Select a track</p>
               <div class="npMeta" id="npMeta">Ready.</div>
             </div>
-            <span class="pill" id="npPill">V1</span>
+            <span class="pill" id="npPill">V2</span>
           </div>
 
           <audio id="audio" controls preload="none"></audio>
@@ -408,7 +414,7 @@
       </div>
 
       <div id="status" class="status">Ready.</div>
-      <div class="mini">V1 Pilot • No fan accounts • No uploads</div>
+      <div class="mini">V2 Pilot • No fan accounts • No uploads</div>
     </div>
   </div>
 
@@ -450,9 +456,7 @@ function forceRepaintKick(){
   try{
     const el = document.documentElement;
     el.style.webkitTransform = 'translateZ(0)';
-    // Force a layout read
     void el.offsetHeight;
-    // Clear transform next frame
     requestAnimationFrame(() => { el.style.webkitTransform = ''; });
   }catch(e){}
 }
@@ -560,7 +564,7 @@ function resetPlayerForAudio(){
 function setNowPlaying(t){
   npTitle.textContent = t.title || 'Untitled';
   npMeta.textContent = t.subtitle || 'Ready.';
-  npPill.textContent = (t.tag || 'V1');
+  npPill.textContent = (t.tag || 'V2');
 
   if(t.cover){
     npCoverImg.src = t.cover;
