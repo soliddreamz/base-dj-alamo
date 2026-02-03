@@ -20,34 +20,22 @@
       "external": true,
       "url": "https://livemixtapes.com/mixtape/eness-the-take-over",
       "tag": "LiveMixtapes"
+    }
+  ],
+  "media": [
+    {
+      "title": "DJ Alamo Interview",
+      "subtitle": "YouTube • Interview",
+      "external": true,
+      "url": "https://youtu.be/vmK6BifaH_Q",
+      "tag": "Interview"
     },
     {
-      "title": "Philly Season 4",
-      "subtitle": "LiveMixtapes • External Mix",
+      "title": "DJ Alamo Interview (Part 2)",
+      "subtitle": "YouTube • Interview",
       "external": true,
-      "url": "https://livemixtapes.com/mixtape/philly-season-4",
-      "tag": "LiveMixtapes"
-    },
-    {
-      "title": "AR-AB — MUD MUZIK 2",
-      "subtitle": "Motivation Under Distress • LiveMixtapes",
-      "external": true,
-      "url": "https://livemixtapes.com/mixtape/ar-ab-mud-muzik-2-motivation-under-distress",
-      "tag": "LiveMixtapes"
-    },
-    {
-      "title": "AR-AB — MUD MUSIK",
-      "subtitle": "Motivation Under Distress • LiveMixtapes",
-      "external": true,
-      "url": "https://livemixtapes.com/mixtape/ar-ab-mud-musik-motivation-under-distress",
-      "tag": "LiveMixtapes"
-    },
-    {
-      "title": "ATL 2 Philly — The Mixtape",
-      "subtitle": "LiveMixtapes • External Mix",
-      "external": true,
-      "url": "https://livemixtapes.com/mixtape/atl-2-philly-the-mixtape",
-      "tag": "LiveMixtapes"
+      "url": "https://youtu.be/P0XGmK8Bk-Y",
+      "tag": "Interview"
     }
   ]
 }
